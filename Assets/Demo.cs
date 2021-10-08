@@ -10,6 +10,7 @@ using System.IO;
 public class Demo : MonoBehaviour
 {
     private V8ScriptEngine engine;
+    private List<Vector3> lastPoints = new List<Vector3>();
 
     // Start is called before the first frame update
     void Start()
@@ -102,18 +103,38 @@ public class Demo : MonoBehaviour
                 //return require('./test').Test.add
             ");
 
+        var hasChanged = false;
+
         var list = new List<Vector3>();
         for (var i = 0; i < transform.childCount; i++)
         {
-            list.Add(transform.GetChild(i).position);
+            var child = transform.GetChild(i);
+            if(child.hasChanged)
+            {
+                hasChanged = true;
+                child.hasChanged = false;
+            }
+
+            list.Add(child.position);
         }
 
-        var result = getBezierPoints(list.ToArray(), 200);
-
-        for (var i = 0; i < result.length - 1; i++)
+        if(hasChanged)
         {
-            var start = new Vector3((float)result[i].x, (float)result[i].y, (float)result[i].z);
-            var end = new Vector3((float)result[i + 1].x, (float)result[i + 1].y, (float)result[i + 1].z);
+            Debug.Log("hasChanged");
+            var result = getBezierPoints(list.ToArray(), 200);
+
+            lastPoints.Clear();
+
+            for (var i = 0; i < result.length; i++)
+            {
+                lastPoints.Add(new Vector3((float)result[i].x, (float)result[i].y, (float)result[i].z));
+            }
+        }
+
+        for (var i = 0; i < lastPoints.Count - 1; i++)
+        {
+            var start = lastPoints[i];
+            var end = lastPoints[i + 1];
             Debug.DrawLine(start, end, Color.red);
         }
     }
